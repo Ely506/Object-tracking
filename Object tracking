@@ -5,17 +5,41 @@ cap = cv2.VideoCapture('video_2.mp4')
 x2 =0
 y2 =0
 time2=0
+
+succed, img = cap.read()
+width = img.shape[1]
+height = img.shape[0]
+def get_user_square(width, height):
+    print(f"Доступная ширина изображения: {width} пикселей")
+    print(f"Доступная высота изображения: {height} пикселей")
+    while True:
+        try:
+            print("\nВведите координаты верхнего левого угла квадрата:")
+            square_x = int(input("X координата: "))
+            square_y = int(input("Y координата: "))
+
+            print("\nВведите координаты нижнего правого угла квадрата:")
+            cx2 = int(input("X координата: "))
+            cy2 = int(input("Y координата: "))
+
+            # Проверка корректности координат
+            if (0 <= square_x < width and 0 <= square_y < height and
+                    0 <= cx2 < width and 0 <= cy2 < height and
+                    square_x < cx2 and square_y < cy2):
+                return square_x, square_y, cx2, cy2
+            else:
+                print("Ошибка: координаты выходят за границы изображения или некорректны!")
+        except ValueError:
+            print("Ошибка: введите целые числа!")
+square_x, square_y, cx2, cy2 = get_user_square(width, height)
+square_top_left = (square_x, square_y)
+square_bottom_right = (cx2, cy2)
+
 while True:
     succed, img = cap.read()
     if not succed:
         break
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    width = img.shape[1]
-    height = img.shape[0]
-    square_x = width // 2 - 100
-    square_y = height // 2 - 100
-    square_top_left = (square_x, square_y)
-    square_bottom_right = (square_x + 200, square_y + 200)
     cv2.rectangle(img, square_top_left, square_bottom_right, (0, 255, 0), thickness=3)
     faces = cv2.CascadeClassifier('faces.xml')
     results = faces.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=55)
@@ -37,7 +61,7 @@ while True:
                 if center_y > square_bottom_right[1]:
                     direction += "DOWN "
             cv2.circle(img, (center_x, center_y), 5, color, -1)
-            cv2.putText(img, direction, (0,60), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 0, 255), 1)
+            cv2.putText(img, direction, (0,90), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 0, 255), 1)
 
             time1 = time.time()
             dtime = time1 - time2
@@ -46,7 +70,9 @@ while True:
             time2=time1
             x2 = center_x
             y2 = center_y
-            cv2.putText(img, str(distance), (0,30), cv2.FONT_HERSHEY_TRIPLEX, 1, (255, 0, 0), 1)
+            cv2.putText(img, f"{distance} px/s", (0,60), cv2.FONT_HERSHEY_TRIPLEX, 1, (255, 0, 0), 1)
+            coord_text = f"coordinates: ({center_x}, {center_y})"
+            cv2.putText(img, coord_text, (0,30), cv2.FONT_HERSHEY_TRIPLEX, 1, (255, 0, 0), 1)
 
     cv2.imshow("Object tracking", img)
     if cv2.waitKey(1) and 0xFF==ord('a'):
